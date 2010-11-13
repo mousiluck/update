@@ -151,6 +151,7 @@ fi
 ${format_cmd} -q -L ${partition} -b 4096 -m 0 -F ${devblock}
 # tune the filesystem - check every 100 mounts or 30 days
 tune2fs -c 100 -i 30d -m 0 ${devblock}
+tune2fs -o journal_data_writeback ${devblock}
 fi
 # mount the new filesystem - exit on failure (TODO: restore on error)
 busybox mount -t ${filesystem} ${devblock} /${partition} -o $mountopt || halt
