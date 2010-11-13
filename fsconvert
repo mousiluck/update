@@ -1,9 +1,11 @@
 #!/sbin/busybox sh
 #
-# z4mod, by Elia Yehuda, (c) 2010, GPLv2
+# CyanogenMod-FilesystemConverter for Samsung Galaxy S
 # backup a partition, format, and restore
+# by codeworkx, coolya, finghin (c) 2010, GPLv2
+# based on z4mod by Elia Yehuda
 #
-version=RC0_GalaxyS
+version=1.0.0
 
 # we make sure we have /sdcard mounted
 sdcardmounted=`busybox grep sdcard /proc/mounts`
@@ -28,12 +30,12 @@ exit 1
 }
 
 busybox cat <<EOF
-###############################################################################
+########################################################################################
 #
-# Starting cyanogenmod-$version '$3' convert on /$1 (/dev/block/$2)
+# Starting CyanogenMod-FilesystemConverter-$version '$3' convert on /$1 (/dev/block/$2)
 # `busybox date`
 #
-###############################################################################
+########################################################################################
 EOF
 
 partition="$1"
@@ -42,22 +44,17 @@ filesystem="$3"
 
 if [ "${filesystem:0:3}" == "ext" ]; then
 [ `busybox grep ${filesystem} /proc/filesystems` ] && format_cmd=mkfs.${filesystem}
-elif [ "$filesystem" == "jfs" ]; then
-[ `busybox grep ${filesystem} /proc/filesystems` ] && format_cmd=mkfs.${filesystem}
 elif [ "$filesystem" == "rfs" ]; then
 format_cmd=fat.format
 else
 # defaulting to 'auto' - check which filesystem are supported
-        [ `busybox grep jfs /proc/filesystems` ] && filesystem=jfs
-[ `busybox grep ext2 /proc/filesystems` ] && filesystem=ext2
-[ `busybox grep ext3 /proc/filesystems` ] && filesystem=ext3
 [ `busybox grep ext4 /proc/filesystems` ] && filesystem=ext4
 format_cmd=mkfs.${filesystem}
 fi
 
 # check we have all the tools needed
 [ "${format_cmd}" == "" ] && halt
-[ `busybox which ${format_cmd}` ] || halt
+[ `busybox which /system/xbin/${format_cmd}` ] || halt
 
 # fix mtab errors
 busybox ln -s /proc/mounts /etc/mtab
@@ -65,13 +62,29 @@ busybox ln -s /proc/mounts /etc/mtab
 # /system takes special handling before we can unmount it
 if [ "${partition}" == "system" ]; then
 # if we want to umount it, we better have it in /sbin...
-busybox cp `busybox which ${format_cmd}` /sbin/
+busybox cp `busybox which /system/xbin/${format_cmd}` /sbin/
 # kill all processes using /system
 busybox fuser -mk /system
 fi
 
+#
+# Make sure target partition is mounted
+#
+    # first, unmount to be sure
+    busybox umount /${partition}
+
+    # try to mount data as rfs
+    busybox mount -t rfs ${devblock} /${partition}
+
+    # otherwise mount data as ext4
+    if busybox [ -z "`busybox mount | busybox grep ${devblock} | busybox grep rfs`" ]; then
+        /sbin/fsck.ext4 -p ${devblock}
+        /sbin/busybox mount -t ext4 ${devblock} /${partition}
+    fi
+
+
 # get current filesystem
-currentfs=`busybox grep "${partition}" /proc/mounts | busybox awk '{print $5}'`
+currentfs=`busybox grep "/${partition}" /proc/mounts | busybox awk '{print $3}'`
 [ "${currentfs}" == "${filesystem}" ] && halt
 # defaulting to rfs
 [ "${currentfs}" == "" ] && currentfs="rfs"

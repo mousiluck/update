@@ -1,5 +1,7 @@
-ui_print("Welcome to CyanogenMod-6.1-RC0-GalaxyS");
+ui_print("Welcome to CyanogenMod-6.1-BETA0-GalaxyS");
 assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000");
+
+mount("MTD", "system", "/system");
 
 # START: backup gapps
 package_extract_file("system/bin/backuptool.sh", "/tmp/backuptool.sh");
@@ -8,39 +10,12 @@ run_program("/tmp/backuptool.sh", "backup");
 # END: backup gapps
 
 # START: install 
-show_progress(0.2, 15);
-ui_print("Installing system...");
-mount("MTD", "system", "/system");
-del_recursive("/system");
+show_progress(0.3, 140);
+ui_print("Installing system");
+ui_print("This will take a while...");
+delete_recursive("/system");
 package_extract_dir("system", "/system");
 # END: install
-
-# START: convert
-ui_print("Converting Filesystem");
-ui_print("This WILL take a while...");
-
-# we must have /sdcard mounted to host compressed files
-mount("vfat", "/dev/block/mmcblk0p1", "/sdcard");
-assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
-
-# clean the log on a new run
-delete("/sdcard/cyanogenmod.log");
-
-package_extract_file("system/xbin/busybox", "/sbin/busybox");
-package_extract_file("fsconvert", "/sbin/fsconvert");
-set_perm(0, 0, 04755, "/sbin/busybox");
-set_perm(0, 0, 04755, "/sbin/fsconvert");
-
-show_progress(0.1, 0);
-
-# Start converting partitions
-ui_print("--[ Converting /data");
-ui_print("");
-show_progress(0.5, 180);
-run_program("/sbin/fsconvert", "data", "mmcblk0p2", "auto");
-
-unmount("sdcard");
-# END: convert
 
 # START: symlinks
 ui_print("Setting symlinks...");
@@ -122,7 +97,7 @@ symlink("toolbox", "/system/bin/cat", "/system/bin/cmp",
 # END: symlinks
 
 # START: permissions
-ui_print("Setting permissions...");
+ui_print("Setting permissions");
 set_perm_recursive(0, 0, 0755, 0644, "/system");
 set_perm_recursive(0, 2000, 0755, 0755, "/system/bin");
 set_perm_recursive(0, 0, 0755, 0755, "/system/media/audio");
@@ -158,14 +133,41 @@ set_perm(0, 0, 0777, "/tmp/backuptool.sh");
 run_program("/tmp/backuptool.sh", "restore");
 # END: restore gapps
 
-unmount("/system");
+# START: convert
+ui_print("Converting filesystems");
+ui_print("This will take a while...");
+
+# we must have /sdcard mounted to host compressed files
+mount("vfat", "/dev/block/mmcblk0p1", "/sdcard");
+assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
+
+# clean the log on a new run
+delete("/sdcard/cyanogenmod.log");
+
+package_extract_file("system/xbin/busybox", "/sbin/busybox");
+package_extract_file("fsconvert", "/sbin/fsconvert");
+set_perm(0, 0, 04755, "/sbin/busybox");
+set_perm(0, 0, 04755, "/sbin/fsconvert");
+
+show_progress(0.1, 0);
+
+# Start converting partitions
+ui_print("--[ Converting /data");
+show_progress(0.4, 180);
+run_program("/sbin/fsconvert", "data", "mmcblk0p2", "ext4");
+
+ui_print("--[ Converting /dbdata");
+show_progress(0.4, 180);
+run_program("/sbin/fsconvert", "dbdata", "stl10", "ext4");
+# END: convert
 
 # START: Kernel flash
-ui_print("Flashing kernel");
+ui_print("Writing kernel");
 show_progress(0.2, 5);
 package_extract_file("bmlwrite", "/tmp/bmlwrite");
 package_extract_file("zImage", "/tmp/zImage");
 set_perm(0, 0, 0755, "/tmp/bmlwrite");
 run_program("/tmp/bmlwrite", "/tmp/zImage", "/dev/block/bml7");
 # END: Kernel flash
+ui_print("Done");
 
