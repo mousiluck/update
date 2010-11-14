@@ -62,12 +62,6 @@ fi
 # fix mtab errors
 busybox ln -s /proc/mounts /etc/mtab
 
-# /system takes special handling before we can unmount it
-if [ "${partition}" == "system" ]; then
-      # kill all processes using /system
-      busybox fuser -mk /system
-fi
-
 # copy format binary to /sbin
 busybox cp `busybox which /system/xbin/${format_cmd}` /sbin/
 
@@ -156,6 +150,9 @@ elif [ "${filesystem}" == "ext4" ]; then
       tune2fs -c 100 -i 30d -m 0 ${devblock}
       tune2fs -o journal_data_writeback ${devblock}
 fi
+
+# do a filesystemcheck on partition
+fsck.${filesystem} -f ${devblock}
 
 # mount the new filesystem - exit on failure
 busybox mount -t ${filesystem} ${devblock} /${partition} -o $mountopt || halt
