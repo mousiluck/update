@@ -147,8 +147,7 @@ elif [ "${filesystem}" == "ext4" ]; then
       mountopt="nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0,noauto_da_alloc"
       ${format_cmd} -q -L ${partition} -b 4096 -m 0 -F ${devblock}
       # tune the filesystem - check every 100 mounts or 30 days
-      tune2fs -c 100 -i 30d -m 0 ${devblock}
-      tune2fs -o journal_data_writeback ${devblock}
+      tune2fs -c 100 -i 30d -m 0 -o journal_data_writeback  ${devblock}
 fi
 
 # do a filesystemcheck on partition

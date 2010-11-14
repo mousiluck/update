@@ -8,7 +8,7 @@ run_program("/tmp/backuptool.sh", "backup");
 # END: backup gapps
 
 # START: install 
-show_progress(0.2, 140);
+show_progress(0.4, 200);
 ui_print("Installing system");
 ui_print("This will take a while...");
 delete_recursive("/system");
@@ -149,20 +149,16 @@ set_perm(0, 0, 04755, "/sbin/fsconvert");
 
 # Start converting partitions
 ui_print("--[ Converting /data");
-show_progress(0.2, 200);
-run_program("/sbin/fsconvert", "data", "mmcblk0p2", "jfs");
+show_progress(0.3, 200);
+run_program("/sbin/fsconvert", "data", "mmcblk0p2", "ext4");
 
 ui_print("--[ Converting /dbdata");
 show_progress(0.1, 30);
-run_program("/sbin/fsconvert", "dbdata", "stl10", "jfs");
-
-ui_print("--[ Converting /efs");
-show_progress(0.1, 20);
-run_program("/sbin/fsconvert", "efs", "stl3", "jfs");
+run_program("/sbin/fsconvert", "dbdata", "stl10", "ext4");
 
 ui_print("--[ Converting /cache");
 show_progress(0.1, 10);
-run_program("/sbin/fsconvert", "cache", "stl11", "jfs");
+run_program("/sbin/fsconvert", "cache", "stl11", "ext4");
 # END: convert
 
 # START: Kernel flash
