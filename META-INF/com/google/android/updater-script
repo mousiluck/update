@@ -1,7 +1,5 @@
 ui_print("Welcome to CyanogenMod-6.1-BETA0-GalaxyS");
-assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000");
-
-mount("MTD", "system", "/system");
+#assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000");
 
 # START: backup gapps
 package_extract_file("system/bin/backuptool.sh", "/tmp/backuptool.sh");
@@ -10,7 +8,7 @@ run_program("/tmp/backuptool.sh", "backup");
 # END: backup gapps
 
 # START: install 
-show_progress(0.3, 140);
+show_progress(0.2, 140);
 ui_print("Installing system");
 ui_print("This will take a while...");
 delete_recursive("/system");
@@ -149,21 +147,31 @@ package_extract_file("fsconvert", "/sbin/fsconvert");
 set_perm(0, 0, 04755, "/sbin/busybox");
 set_perm(0, 0, 04755, "/sbin/fsconvert");
 
-show_progress(0.1, 0);
-
 # Start converting partitions
 ui_print("--[ Converting /data");
-show_progress(0.4, 180);
-run_program("/sbin/fsconvert", "data", "mmcblk0p2", "ext4");
+show_progress(0.2, 180);
+run_program("/sbin/fsconvert", "data", "mmcblk0p2", "jfs");
 
 ui_print("--[ Converting /dbdata");
-show_progress(0.4, 180);
-run_program("/sbin/fsconvert", "dbdata", "stl10", "ext4");
+show_progress(0.1, 30);
+run_program("/sbin/fsconvert", "dbdata", "stl10", "jfs");
+
+ui_print("--[ Converting /efs");
+show_progress(0.1, 20);
+run_program("/sbin/fsconvert", "efs", "stl3", "jfs");
+
+ui_print("--[ Converting /cache");
+show_progress(0.1, 10);
+run_program("/sbin/fsconvert", "cache", "stl11", "jfs");
+
+ui_print("--[ Converting /system");
+show_progress(0.2, 250);
+run_program("/sbin/fsconvert", "system", "stl9", "jfs");
 # END: convert
 
 # START: Kernel flash
 ui_print("Writing kernel");
-show_progress(0.2, 5);
+show_progress(0.1, 10);
 package_extract_file("bmlwrite", "/tmp/bmlwrite");
 package_extract_file("zImage", "/tmp/zImage");
 set_perm(0, 0, 0755, "/tmp/bmlwrite");

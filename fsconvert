@@ -10,10 +10,10 @@ version=1.0.0
 # we make sure we have /sdcard mounted
 sdcardmounted=`busybox grep sdcard /proc/mounts`
 if [ "$sdcardmounted" == "" ]; then
-# mount sdcard according to device node from fota.rc
-sdcarddev=`busybox grep "mount vfat .* /sdcard" /fota.rc | busybox awk '{print $3}'`
-mkdir /sdcard
-busybox mount $sdcarddev /sdcard
+      # mount sdcard according to device node from fota.rc
+      sdcarddev=`busybox grep "mount vfat .* /sdcard" /fota.rc | busybox awk '{print $3}'`
+      mkdir /sdcard
+      busybox mount $sdcarddev /sdcard
 fi
 
 # everything is logged into /sdcard/cyanogenmod.log
@@ -43,13 +43,16 @@ devblock=/dev/block/"$2"
 filesystem="$3"
 
 if [ "${filesystem:0:3}" == "ext" ]; then
-[ `busybox grep ${filesystem} /proc/filesystems` ] && format_cmd=mkfs.${filesystem}
+        [ `busybox grep ${filesystem} /proc/filesystems` ] && format_cmd=mkfs.${filesystem}
+elif [ "$filesystem" == "jfs" ]; then
+	[ `busybox grep ${filesystem} /proc/filesystems` ] && format_cmd=mkfs.${filesystem}
 elif [ "$filesystem" == "rfs" ]; then
-format_cmd=fat.format
+        format_cmd=fat.format
 else
-# defaulting to 'auto' - check which filesystem are supported
-[ `busybox grep ext4 /proc/filesystems` ] && filesystem=ext4
-format_cmd=mkfs.${filesystem}
+      # defaulting to 'auto' - check which filesystem are supported
+      [ `busybox grep jfs /proc/filesystems` ] && filesystem=jfs
+      [ `busybox grep ext4 /proc/filesystems` ] && filesystem=ext4
+      format_cmd=mkfs.${filesystem}
 fi
 
 # check we have all the tools needed
@@ -61,25 +64,30 @@ busybox ln -s /proc/mounts /etc/mtab
 
 # /system takes special handling before we can unmount it
 if [ "${partition}" == "system" ]; then
-# if we want to umount it, we better have it in /sbin...
-busybox cp `busybox which /system/xbin/${format_cmd}` /sbin/
-# kill all processes using /system
-busybox fuser -mk /system
+      # kill all processes using /system
+      busybox fuser -mk /system
 fi
+
+# copy format binary to /sbin
+busybox cp `busybox which /system/xbin/${format_cmd}` /sbin/
 
 #
 # Make sure target partition is mounted
 #
     # first, unmount to be sure
-    busybox umount /${partition}
+    busybox umount -l /${partition}
 
-    # try to mount data as rfs
+    # try to mount partition as rfs
     busybox mount -t rfs ${devblock} /${partition}
 
-    # otherwise mount data as ext4
+    # otherwise mount partition as ext4
     if busybox [ -z "`busybox mount | busybox grep ${devblock} | busybox grep rfs`" ]; then
-        /sbin/fsck.ext4 -p ${devblock}
         /sbin/busybox mount -t ext4 ${devblock} /${partition}
+    fi
+
+    # otherwise mount partition as jfs
+    if busybox [ -z "`busybox mount | busybox grep ${devblock} | busybox grep ext4`" ]; then
+        /sbin/busybox mount -t jfs ${devblock} /${partition}
     fi
 
 
@@ -90,16 +98,18 @@ currentfs=`busybox grep "/${partition}" /proc/mounts | busybox awk '{print $3}'`
 [ "${currentfs}" == "" ] && currentfs="rfs"
 
 # we unmount just to make sure target is not mounted already
-busybox umount /${partition}
+busybox umount -l /${partition}
+
+# do a filesystemcheck on partition
+fsck.${currentfs} -f ${devblock}
 
 # we must mount target with propriate mount parameters
 if [ "${currentfs}" == "rfs" ]; then
-# mount using RFS mount parameters - otherwise it will be mounted as FAT, which is bad.
-busybox mount -t $currentfs ${devblock} /${partition} -o nosuid,nodev,check=no || halt
-#mount -o nosuid,nodev,check=no -t rfs ${devblock} /${partition}
+      # mount using RFS mount parameters - otherwise it will be mounted as FAT, which is bad.
+      busybox mount -t $currentfs ${devblock} /${partition} -o nosuid,nodev,check=no || halt
 else
-# mount target as ext2/3/4
-busybox mount -t $currentfs ${devblock} /${partition} -o nosuid,nodev,noatime,nodiratime,errors=continue || halt
+      # mount target as ext4/jfs
+      busybox mount -t $currentfs ${devblock} /${partition} -o nosuid,nodev,noatime,nodiratime,errors=continue || halt
 fi
 
 # remove old backup if any
@@ -118,7 +128,7 @@ busybox tar cf /sdcard/${partition}.cyanogenmod.tar /${partition}
 busybox echo $?
 
 # umount - exit on failure, no harm is done
-busybox umount /${partition} || halt
+busybox umount -l /${partition} || halt
 
 # for 'data' partition we make sure the filesystem type is flagged in the partition table
 if [ "${partition}" == "data" ]; then
@@ -132,28 +142,22 @@ echo -en "\x83" | busybox dd of=/dev/block/mmcblk0 seek=$((0x1d2))
 fi
 fi
 
-# Format partition with optimized settings (TODO: restore on error)
+# Format partition with optimized settings
 if [ "${filesystem}" == "rfs" ]; then
-mountopt="llw,check=no,nosuid,nodev"
-${format_cmd} -F 32 -S 4096 -s 4 ${devblock}
+      mountopt="llw,check=no,nosuid,nodev"
+      ${format_cmd} -F 32 -S 4096 -s 4 ${devblock}
 elif [ "${filesystem}" == "jfs" ]; then
-mountopt="nosuid,nodev,noatime,nodiratime,errors=continue"
-${format_cmd} -L ${partition} -q ${devblock}
-else
-if [ "${filesystem}" == "ext2" ]; then
-mountopt="nosuid,nodev,noatime,nodiratime,errors=continue,nobh"
-elif [ "${filesystem}" == "ext3" ]; then
-mountopt="nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0"
-else
-mountopt="nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0,noauto_da_alloc"
+      mountopt="nosuid,nodev,noatime,nodiratime,errors=continue"
+      ${format_cmd} -L ${partition} -q ${devblock}
+elif [ "${filesystem}" == "ext4" ]; then
+      mountopt="nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0,noauto_da_alloc"
+      ${format_cmd} -q -L ${partition} -b 4096 -m 0 -F ${devblock}
+      # tune the filesystem - check every 100 mounts or 30 days
+      tune2fs -c 100 -i 30d -m 0 ${devblock}
+      tune2fs -o journal_data_writeback ${devblock}
 fi
-# TODO: "-E lazy_itable_init=1 -O sparse_super,uninit_bg" doesnt work on ext2. maybe busybox mount issue?
-${format_cmd} -q -L ${partition} -b 4096 -m 0 -F ${devblock}
-# tune the filesystem - check every 100 mounts or 30 days
-tune2fs -c 100 -i 30d -m 0 ${devblock}
-tune2fs -o journal_data_writeback ${devblock}
-fi
-# mount the new filesystem - exit on failure (TODO: restore on error)
+
+# mount the new filesystem - exit on failure
 busybox mount -t ${filesystem} ${devblock} /${partition} -o $mountopt || halt
 
 # this is for the logging...
