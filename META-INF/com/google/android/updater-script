@@ -1,4 +1,4 @@
-ui_print("Welcome to CyanogenMod-6.1-BETA0-GalaxyS");
+ui_print("Welcome to CyanogenMod-6.1-BETA1-GalaxyS");
 assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000" || getprop("ro.product.device") == "GT-I9000B" || getprop("ro.build.product") == "GT-I9000B" || getprop("ro.product.board") == "GT-I9000B" || getprop("ro.product.device") == "GT-I9000M" || getprop("ro.build.product") == "GT-I9000M" || getprop("ro.product.board") == "GT-I9000M" || getprop("ro.product.device") == "GT-I9000T" || getprop("ro.build.product") == "GT-I9000T" || getprop("ro.product.board") == "GT-I9000T");
 
 # START: backup gapps
