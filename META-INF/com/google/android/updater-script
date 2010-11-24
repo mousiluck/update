@@ -1,17 +1,39 @@
 ui_print("Welcome to CyanogenMod-6.1-BETA1-GalaxyS");
 assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000" || getprop("ro.product.device") == "GT-I9000B" || getprop("ro.build.product") == "GT-I9000B" || getprop("ro.product.board") == "GT-I9000B" || getprop("ro.product.device") == "GT-I9000M" || getprop("ro.build.product") == "GT-I9000M" || getprop("ro.product.board") == "GT-I9000M" || getprop("ro.product.device") == "GT-I9000T" || getprop("ro.build.product") == "GT-I9000T" || getprop("ro.product.board") == "GT-I9000T");
 
+# we must have /sdcard mounted to host backups
+mount("vfat", "/dev/block/mmcblk0p1", "/sdcard");
+assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
+
 # START: backup gapps
 package_extract_file("system/bin/backuptool.sh", "/tmp/backuptool.sh");
 set_perm(0, 0, 0777, "/tmp/backuptool.sh");
 run_program("/tmp/backuptool.sh", "backup");
 # END: backup gapps
 
+# clean the log on a new run
+delete("/sdcard/format_system.log");
+
+# START: format system
+ui_print("Preparing system");
+package_extract_file("system/xbin/busybox", "/sbin/busybox");
+package_extract_file("system/xbin/fat.format", "/sbin/fat.format");
+package_extract_file("system/xbin/fsck_msdos", "/sbin/fsck_msdos");
+package_extract_file("format_system", "/sbin/format_system");
+
+set_perm(0, 0, 04755, "/sbin/busybox");
+set_perm(0, 0, 04755, "/sbin/fat.format");
+set_perm(0, 0, 04755, "/sbin/fsck_msdos");
+set_perm(0, 0, 04755, "/sbin/format_system");
+
+ui_print("--[ Formating /system");
+run_program("/sbin/format_system");
+# END: format system
+
 # START: install 
 show_progress(0.4, 200);
 ui_print("Installing system");
 ui_print("This will take a while...");
-delete_recursive("/system");
 package_extract_dir("system", "/system");
 # END: install
 
@@ -136,7 +158,6 @@ ui_print("Converting filesystems");
 ui_print("This will take a while...");
 
 # we must have /sdcard mounted to host compressed files
-mount("vfat", "/dev/block/mmcblk0p1", "/sdcard");
 assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
 
 # clean the log on a new run
