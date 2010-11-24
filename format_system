@@ -36,7 +36,7 @@ EOF
 busybox ln -s /proc/mounts /etc/mtab
 
 # first, unmount to be sure
-busybox umount -l /dev/block/stl9 || halt
+busybox umount -l /dev/block/stl9
 
 # format system
 /sbin/fat.format -v -S 4096 -s 1 -F 32 /dev/block/stl9
