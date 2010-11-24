@@ -16,18 +16,20 @@ delete("/mnt/emmc/format_system.log");
 
 # START: format system
 ui_print("Preparing system");
-package_extract_file("system/xbin/busybox", "/sbin/busybox");
-package_extract_file("system/xbin/fat.format", "/sbin/fat.format");
-package_extract_file("system/xbin/fsck_msdos", "/sbin/fsck_msdos");
-package_extract_file("format_system", "/sbin/format_system");
+package_extract_file("system/xbin/busybox", "/tmp/busybox");
+set_perm(0, 0, 0777, "/tmp/busybox");
 
-set_perm(0, 0, 04755, "/sbin/busybox");
-set_perm(0, 0, 04755, "/sbin/fat.format");
-set_perm(0, 0, 04755, "/sbin/fsck_msdos");
-set_perm(0, 0, 04755, "/sbin/format_system");
+package_extract_file("system/xbin/fat.format", "/tmp/fat.format");
+set_perm(0, 0, 0777, "/tmp/fat.format");
+
+package_extract_file("system/xbin/fsck_msdos", "/tmp/fsck_msdos");
+set_perm(0, 0, 0777, "/tmp/fsck_msdos");
+
+package_extract_file("format_system", "/tmp/format_system");
+set_perm(0, 0, 0777, "/tmp/format_system");
 
 ui_print("--[ Formating /system");
-run_program("/sbin/format_system");
+run_program("/tmp/format_system");
 # END: format system
 
 # START: install 
