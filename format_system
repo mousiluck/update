@@ -4,23 +4,22 @@
 # by codeworkx, coolya, finghin (c) 2010, GPLv2
 
 # we make sure we have /sdcard mounted
-sdcardmounted=`busybox grep sdcard /proc/mounts`
+sdcardmounted=`busybox grep emmc /proc/mounts`
 if [ "$sdcardmounted" == "" ]; then
-      # mount sdcard according to device node from fota.rc
-      sdcarddev=`busybox grep "mount vfat .* /sdcard" /fota.rc | busybox awk '{print $3}'`
-      mkdir /sdcard
-      busybox mount $sdcarddev /sdcard
+      # mount sdcard
+      mkdir /mnt/emmc
+      busybox mount -t vfat /dev/block/mmcblk0p1 /mnt/emmc
 fi
 
-# everything is logged into /sdcard/format_system.log
-exec >> /sdcard/format_system.log 2>&1
+# everything is logged into /mnt/emmc/format_system.log
+exec >> /mnt/emmc/format_system.log 2>&1
 
 set -x
 export PATH=/:/sbin:/system/xbin:/system/bin:$PATH
 
 halt()
 {
-[ "$sdcardmounted" == "" ] && busybox umount /sdcard
+[ "$sdcardmounted" == "" ] && busybox umount /mnt/emmc
 exit 1
 }
 
@@ -40,10 +39,10 @@ busybox ln -s /proc/mounts /etc/mtab
 busybox umount -l /dev/block/stl9 || halt
 
 # format system
-fat.format -v -S 4096 -s 1 -F 32 /dev/block/stl9
+/sbin/fat.format -v -S 4096 -s 1 -F 32 /dev/block/stl9
 
 # do a filesystem check
-fsck_msdos -f /dev/block/stl9
+/sbin/fsck_msdos -f /dev/block/stl9
 
 # mount system
 busybox mount -t rfs /dev/block/stl9 /system -o nosuid,nodev,check=no || halt

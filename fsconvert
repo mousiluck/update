@@ -7,17 +7,16 @@
 #
 version=1.0.0
 
-# we make sure we have /sdcard mounted
-sdcardmounted=`busybox grep sdcard /proc/mounts`
+# we make sure we have /mnt/emmc mounted
+sdcardmounted=`busybox grep emmc /proc/mounts`
 if [ "$sdcardmounted" == "" ]; then
-      # mount sdcard according to device node from fota.rc
-      sdcarddev=`busybox grep "mount vfat .* /sdcard" /fota.rc | busybox awk '{print $3}'`
-      mkdir /sdcard
-      busybox mount $sdcarddev /sdcard
+      # mount /mnt/emmc
+      mkdir /mnt/emmc
+      busybox mount -t vfat /dev/block/mmcblk0p1 /mnt/emmc
 fi
 
-# everything is logged into /sdcard/cyanogenmod.log
-exec >> /sdcard/cyanogenmod.log 2>&1
+# everything is logged into /mnt/emmc/cyanogenmod.log
+exec >> /mnt/emmc/cyanogenmod.log 2>&1
 
 set -x
 export PATH=/:/sbin:/system/xbin:/system/bin:$PATH
@@ -25,7 +24,7 @@ export PATH=/:/sbin:/system/xbin:/system/bin:$PATH
 halt()
 {
 umount /${partition}
-[ "$sdcardmounted" == "" ] && busybox umount /sdcard
+[ "$sdcardmounted" == "" ] && busybox umount /mnt/emmc
 exit 1
 }
 
@@ -107,17 +106,17 @@ else
 fi
 
 # remove old backup if any
-busybox rm -f /sdcard/${partition}.cyanogenmod.tar
+busybox rm -f /mnt/emmc/${partition}.cyanogenmod.tar
 
 # check for free space (using such a complicated command to overcome a 'df' bug with long lines)
-# get free space on /sdcard
+# get free space on /mnt/emmc
 free_space=`busybox df /dev/block/mmcblk0p1 | busybox tail -n1 | busybox sed 's|/[^ ]*||g' | busybox awk '{print $3}'`
 # get used space on target
 backup_size=`busybox df ${devblock} | busybox tail -n1 | busybox sed 's|/[^ ]*||g' | busybox awk '{print $2}'`
 [ $backup_size -ge $free_space ] && halt
 
 # backup target - exit on failure
-busybox tar cf /sdcard/${partition}.cyanogenmod.tar /${partition}
+busybox tar cf /mnt/emmc/${partition}.cyanogenmod.tar /${partition}
 # for debug:
 busybox echo $?
 
@@ -160,9 +159,9 @@ busybox mount -t ${filesystem} ${devblock} /${partition} -o $mountopt || halt
 busybox mount | busybox grep ${devblock}
 
 # extract our data back to the new filesystem
-busybox tar xf /sdcard/${partition}.cyanogenmod.tar -C /
+busybox tar xf /mnt/emmc/${partition}.cyanogenmod.tar -C /
 ret=$?
-[ $ret == 0 ] && busybox rm /sdcard/${partition}.cyanogenmod.tar
+[ $ret == 0 ] && busybox rm /mnt/emmc/${partition}.cyanogenmod.tar
 
 busybox mount -o remount,rw /system
 busybox touch /system/etc/fstab
@@ -174,6 +173,6 @@ busybox mount -o remount,ro /system
 
 # umount
 busybox umount ${devblock}
-[ "$sdcardmounted" == "" ] && busybox umount /sdcard
+[ "$sdcardmounted" == "" ] && busybox umount /mnt/emmc
 
 exit $ret

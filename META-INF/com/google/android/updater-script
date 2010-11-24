@@ -1,9 +1,9 @@
 ui_print("Welcome to CyanogenMod-6.1-BETA1-GalaxyS");
 assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000" || getprop("ro.product.device") == "GT-I9000B" || getprop("ro.build.product") == "GT-I9000B" || getprop("ro.product.board") == "GT-I9000B" || getprop("ro.product.device") == "GT-I9000M" || getprop("ro.build.product") == "GT-I9000M" || getprop("ro.product.board") == "GT-I9000M" || getprop("ro.product.device") == "GT-I9000T" || getprop("ro.build.product") == "GT-I9000T" || getprop("ro.product.board") == "GT-I9000T");
 
-# we must have /sdcard mounted to host backups
-mount("vfat", "/dev/block/mmcblk0p1", "/sdcard");
-assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
+# we must have /mnt/emmc mounted to host backups
+mount("vfat", "/dev/block/mmcblk0p1", "/mnt/emmc");
+assert( is_mounted("/mnt/emmc"));
 
 # START: backup gapps
 package_extract_file("system/bin/backuptool.sh", "/tmp/backuptool.sh");
@@ -12,7 +12,7 @@ run_program("/tmp/backuptool.sh", "backup");
 # END: backup gapps
 
 # clean the log on a new run
-delete("/sdcard/format_system.log");
+delete("/mnt/emmc/format_system.log");
 
 # START: format system
 ui_print("Preparing system");
@@ -157,11 +157,11 @@ run_program("/tmp/backuptool.sh", "restore");
 ui_print("Converting filesystems");
 ui_print("This will take a while...");
 
-# we must have /sdcard mounted to host compressed files
-assert( is_mounted("/sdcard") || is_mounted("/mnt/sdcard"));
+# we must have /mnt/emmc mounted to host compressed files
+assert( is_mounted("/mnt/emmc"));
 
 # clean the log on a new run
-delete("/sdcard/cyanogenmod.log");
+delete("/mnt/emmc/cyanogenmod.log");
 
 package_extract_file("system/xbin/busybox", "/sbin/busybox");
 package_extract_file("fsconvert", "/sbin/fsconvert");
