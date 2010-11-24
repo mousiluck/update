@@ -8,14 +8,14 @@ sdcardmounted=`busybox grep emmc /proc/mounts`
 if [ "$sdcardmounted" == "" ]; then
       # mount sdcard
       mkdir /mnt/emmc
-      /tmp/busybox mount -t vfat /dev/block/mmcblk0p1 /mnt/emmc
+      busybox mount -t vfat /dev/block/mmcblk0p1 /mnt/emmc
 fi
 
 # everything is logged into /mnt/emmc/format_system.log
 exec >> /mnt/emmc/format_system.log 2>&1
 
 set -x
-export PATH=/:/sbin:/tmp:
+export PATH=/:/sbin:/system/xbin:/system/bin:$PATH
 
 halt()
 {
@@ -23,7 +23,7 @@ halt()
 exit 1
 }
 
-/tmp/busybox cat <<EOF
+busybox cat <<EOF
 ########################################################################################
 #
 # Starting CyanogenMod-SystemFormater
@@ -33,18 +33,18 @@ exit 1
 EOF
 
 # fix mtab errors
-/tmp/busybox ln -s /proc/mounts /etc/mtab
+busybox ln -s /proc/mounts /etc/mtab
 
 # first, unmount to be sure
-/tmp/busybox umount -l /dev/block/stl9
+busybox umount -l /dev/block/stl9
 
 # format system
-/tmp/fat.format -v -S 4096 -s 1 -F 32 /dev/block/stl9
+fat.format -v -S 4096 -s 1 -F 32 /dev/block/stl9
 
 # do a filesystem check
-/tmp/fsck_msdos -f /dev/block/stl9
+fsck_msdos -f /dev/block/stl9
 
 # mount system
-/tmp/busybox mount -t rfs /dev/block/stl9 /system -o nosuid,nodev,check=no || halt
+busybox mount -t rfs /dev/block/stl9 /system -o nosuid,nodev,check=no || halt
 
 exit 0
