@@ -17,9 +17,9 @@ delete("/mnt/emmc/format_system.log");
 # START: format system
 ui_print("Preparing system");
 package_extract_file("system/xbin/busybox", "/sbin/busybox");
-package_extract_file("mkfs.ext4", "/sbin/mkfs.ext4");
-package_extract_file("tune2fs", "/sbin/tune2fs");
-package_extract_file("fsck.ext4", "/sbin/fsck.ext4");
+package_extract_file("system/xbin/mkfs.ext4", "/sbin/mkfs.ext4");
+package_extract_file("system/xbin/tune2fs", "/sbin/tune2fs");
+package_extract_file("system/xbin/fsck.ext4", "/sbin/fsck.ext4");
 package_extract_file("format_system", "/sbin/format_system");
 set_perm(0, 0, 04777, "/sbin/busybox");
 set_perm(0, 0, 04777, "/sbin/mkfs.ext4");
