@@ -38,7 +38,7 @@ busybox umount -l /dev/block/stl9
 # format system
 dd if=/dev/zero of=/dev/block/stl9 bs=1024 count=10 || halt
 mkfs.ext4 -q -L /system -b 4096 -m 0 -F /dev/block/stl9 || halt
-tune2fs -c 100 -i 30d -m 0 -o journal_data_writeback /dev/block/stl9
+/sbin/tune2fs -i30d -c100 -m0 -O journal_data_writeback /dev/block/stl9
 
 # do a filesystem check
 fsck.ext4 -f /dev/block/stl9
