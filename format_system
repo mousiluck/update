@@ -44,6 +44,6 @@ tune2fs -c 100 -i 30d -m 0 -o journal_data_writeback  /dev/block/stl9 || halt
 fsck.ext4 -f /dev/block/stl9
 
 # mount system
-busybox mount -t ext4 /dev/block/stl9 /system -o nosuid nodev noatime nodiratime errors=continue nobh data=writeback barrier=0 noauto_da_alloc || halt
+busybox mount -t ext4 /dev/block/stl9 /system -o nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback, barrier=0,noauto_da_alloc || halt
 
 exit 0
