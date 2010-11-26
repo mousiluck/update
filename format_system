@@ -32,18 +32,18 @@ busybox cat <<EOF
 ########################################################################################
 EOF
 
+# first, unmount to be sure
+busybox umount -l /dev/block/stl9
+
 # fix mtab errors
 busybox rm -rf /etc
 busybox mkdir /etc
 busybox ln -s /proc/mounts /etc/mtab
 
-# first, unmount to be sure
-busybox umount -l /dev/block/stl9
-
 # format system
 dd if=/dev/zero of=/dev/block/stl9 bs=1024 count=10 || halt
 mkfs.ext4 -q -L /system -b 4096 -m 0 -F /dev/block/stl9 || halt
-/sbin/tune2fs -o journal_data_writeback /dev/block/stl9
+tune2fs -o journal_data_writeback /dev/block/stl9
 
 # do a filesystem check
 fsck.ext4 -pf /dev/block/stl9
