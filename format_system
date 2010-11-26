@@ -33,7 +33,8 @@ busybox cat <<EOF
 EOF
 
 # fix mtab errors
-mkdir /etc
+busybox rm -rf /etc
+busybox mkdir /etc
 busybox ln -s /proc/mounts /etc/mtab
 
 # first, unmount to be sure
