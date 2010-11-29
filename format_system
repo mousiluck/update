@@ -49,6 +49,6 @@ dd if=/dev/zero of=/dev/block/stl9 bs=1024 count=10 || halt
 /sbin/fsck.ext4 -pf /dev/block/stl9
 
 # mount system
-busybox mount -t ext4 -o nosuid,nodev,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0,noauto_da_alloc /dev/block/stl9 /system || halt
+busybox mount -t ext4 -o rw,noatime,nodiratime,errors=continue,nobh,data=writeback,barrier=0,noauto_da_alloc /dev/block/stl9 /system || halt
 
 exit 0
