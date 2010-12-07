@@ -152,6 +152,8 @@ set_perm(0, 0, 06755, "/system/xbin/procrank");
 set_perm(0, 2000, 06755, "/system/xbin/strace");
 set_perm(0, 0, 06755, "/system/xbin/su");
 set_perm(0, 0, 06755, "/system/xbin/tcpdump");
+set_perm(0, 0, 0755, "/system/etc/init.d/10htccopyright");
+set_perm(0, 0, 0755, "/system/etc/init.d/15audio");
 # END: permissions
 
 # START: restore gapps
