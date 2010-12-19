@@ -15,8 +15,8 @@ if [ "$sdcardmounted" == "" ]; then
       busybox mount -t vfat /dev/block/mmcblk0p1 /mnt/emmc
 fi
 
-# everything is logged into /mnt/emmc/cyanogenmod.log
-exec >> /mnt/emmc/cyanogenmod.log 2>&1
+# everything is logged into /mnt/emmc/gingerbread.log
+exec >> /mnt/emmc/gingerbread.log 2>&1
 
 set -x
 export PATH=/:/sbin:/system/xbin:/system/bin:$PATH
@@ -106,7 +106,7 @@ else
 fi
 
 # remove old backup if any
-busybox rm -f /mnt/emmc/${partition}.cyanogenmod.tar
+busybox rm -f /mnt/emmc/${partition}.gingerbread.tar
 
 # check for free space (using such a complicated command to overcome a 'df' bug with long lines)
 # get free space on /mnt/emmc
@@ -116,7 +116,7 @@ backup_size=`busybox df ${devblock} | busybox tail -n1 | busybox sed 's|/[^ ]*||
 [ $backup_size -ge $free_space ] && halt
 
 # backup target - exit on failure
-busybox tar cf /mnt/emmc/${partition}.cyanogenmod.tar /${partition}
+busybox tar cf /mnt/emmc/${partition}.gingerbread.tar /${partition}
 # for debug:
 busybox echo $?
 
@@ -159,9 +159,9 @@ busybox mount -t ${filesystem} ${devblock} /${partition} -o $mountopt || halt
 busybox mount | busybox grep ${devblock}
 
 # extract our data back to the new filesystem
-busybox tar xf /mnt/emmc/${partition}.cyanogenmod.tar -C /
+busybox tar xf /mnt/emmc/${partition}.gingerbread.tar -C /
 ret=$?
-[ $ret == 0 ] && busybox rm /mnt/emmc/${partition}.cyanogenmod.tar
+[ $ret == 0 ] && busybox rm /mnt/emmc/${partition}.gingerbread.tar
 
 busybox mount -o remount,rw /system
 busybox touch /system/etc/fstab

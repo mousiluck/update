@@ -1,4 +1,4 @@
-ui_print("Welcome to CyanogenMod-6.1-BETA3-GalaxyS");
+ui_print("Welcome to Android 2.3 Gingerbread");
 #assert(getprop("ro.product.device") == "GT-I9000" || getprop("ro.build.product") == "GT-I9000" || getprop("ro.product.board") == "GT-I9000" || getprop("ro.product.device") == "GT-I9000B" || getprop("ro.build.product") == "GT-I9000B" || getprop("ro.product.board") == "GT-I9000B" || getprop("ro.product.device") == "GT-I9000M" || getprop("ro.build.product") == "GT-I9000M" || getprop("ro.product.board") == "GT-I9000M" || getprop("ro.product.device") == "GT-I9000T" || getprop("ro.build.product") == "GT-I9000T" || getprop("ro.product.board") == "GT-I9000T");
 
 # we must have /mnt/emmc mounted to host backups
@@ -169,7 +169,7 @@ ui_print("This will take a while...");
 assert( is_mounted("/mnt/emmc"));
 
 # clean the log on a new run
-delete("/mnt/emmc/cyanogenmod.log");
+delete("/mnt/emmc/gingerbread.log");
 
 package_extract_file("system/xbin/busybox", "/sbin/busybox");
 package_extract_file("fsconvert", "/sbin/fsconvert");
